@@ -1,0 +1,50 @@
+#include "vex.h"
+
+using namespace vex;
+
+vex::brain Brain;
+vex::controller Controller;
+
+vex::motor Motor = vex::motor( vex::PORT1, vex::gearSetting::ratio18_1, false );
+
+int main() {
+  
+
+  // PID constants
+  double Kp = 0.5; // Proportional gain
+  double Ki = 0.1; // Integral gain
+  double Kd = 0.05; // Derivative gain
+
+  // Target position (in degrees)
+  double targetPosition = 90.0;
+
+  // Variables for PID control
+  double error = 0.0;
+  double integral = 0.0;
+  double derivative = 0.0;
+  double previousError = 0.0;
+
+  while (true) {
+    // Get the current position of the motor
+    double currentPosition = Motor.position(degrees);
+
+    // Calculate the error
+    error = targetPosition - currentPosition;
+
+    // Calculate the integral and derivative
+    integral += error;
+    derivative = error - previousError;
+
+    // Calculate the control output
+    double output = (Kp * error) + (Ki * integral) + (Kd * derivative);
+
+    // Set the motor power based on the control output
+    Motor.spin(forward, output, percent);
+
+    // Update previous error for the next iteration
+    previousError = error;
+
+    // Small delay to prevent overwhelming the CPU
+    wait(20, msec);
+  }
+}

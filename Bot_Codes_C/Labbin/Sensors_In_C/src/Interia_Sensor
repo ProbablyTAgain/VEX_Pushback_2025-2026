@@ -1,0 +1,48 @@
+# include "vex.h"
+
+using namespace vex;
+
+// A global instance of vex::brain used for printing to the V5 brain screen
+vex::brain       Brain;
+vex::controller   Controller1 = vex::controller(primary);
+
+vex::inertial InertialS = vex::inertial( vex::PORT2 );
+int main() {
+    
+    Brain.Screen.print("Calibrating Inertial Sensor");
+    InertialS.startCalibration();
+
+    while (InertialS.isCalibrating()) {
+        wait(100, msec);
+    }
+
+    InertialS.setRotation(0, rotationUnits::deg);
+  
+
+    Brain.Screen.setCursor(2,1);
+    Brain.Screen.print("Inertial Sensor Calibrated");
+    wait(1, seconds);
+    Brain.Screen.clearScreen();
+
+
+   
+    while(true) {
+        double Roll = InertialS.roll();
+        double Pitch = InertialS.pitch();
+        double Yaw = InertialS.yaw();
+        double Rotation = InertialS.rotation();
+       
+           
+            Brain.Screen.setCursor(1,1);
+            Brain.Screen.print("X: %.2f", Roll);
+            Brain.Screen.setCursor(2,1);
+            Brain.Screen.print("Y: %.2f", Pitch);
+            Brain.Screen.setCursor(3,1);
+            Brain.Screen.print("Z: %.2f", Yaw);
+            Brain.Screen.setCursor(4,1);
+            Brain.Screen.print("Rotation: %.2f", Rotation);
+            
+
+       wait(20, msec); // Sleep the task for a short amount of time to prevent wasted resources.
+    }
+}

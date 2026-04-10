@@ -1,0 +1,27 @@
+#include "vex.h"
+
+using namespace vex;
+
+vex::brain       Brain;
+vex::controller  Controller(controllerType::primary);
+
+vision::signature VisionS__LIGHT_BLUE = vision::signature(1, -4283, -2847, -3565, 5945, 10119, 8032, 1.6, 0);
+vision::signature VisionS__LIGHT_RED = vision::signature(2, 7895, 11809, 9852, -1351, 1, -675, 1.6, 0);
+
+
+vision VisionS(PORT11, 50);
+
+int main() {
+    while (true) {
+        VisionS.takeSnapshot(VisionS__LIGHT_RED);
+        int objectCount = VisionS.objectCount;
+        Brain.Screen.setCursor(1,1);
+        Brain.Screen.print("Object Count: %d", objectCount);
+        
+        if (objectCount > 0) {
+            vision::object mainObject = VisionS.objects[0];
+            Brain.Screen.setCursor(2,1);
+            Brain.Screen.print("Object Signature: %d", mainObject.id);
+        }
+}
+}
