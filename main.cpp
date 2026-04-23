@@ -3,12 +3,13 @@
 /*    Module:             main.cpp                                                  */
 /*    Author:             VEX                                                       */
 /*    Created:            Wed Jun 09 2021                                           */
-/*    Description:        Drive to Location (Known Starting Position)               */
+/*    Description:        Drive to Location (Using Tangents)                        */
 /*                        This example will show how to use a GPS Sensor to         */
-/*                        navigate a V5 Moby Hero Bot to the center of a field      */
-/*                        by driving along the X-axis then the Y-axis               */
+/*                        navigate a V5 Moby Hero Bot to the center of the field    */
+/*                        by using a tangent calculation to determine the heading   */
+/*                        to drive towards                                          */
 /*                                                                                  */
-/*    Starting Position:  Bottom Right Corner - Facing West                         */
+/*    Starting Position:  Any                                                       */
 /*                                                                                  */
 /*----------------------------------------------------------------------------------*/
 
@@ -27,24 +28,28 @@
 
 #include "vex.h"
 
+using namespace vex;
 using signature = vision::signature;
 using code = vision::code;
 
 // A global instance of brain used for printing to the V5 Brain screen
 brain  Brain;
 
-motor Right_Top( PORT18, gearSetting::ratio6_1, false);
-motor Right_Middle(PORT19, gearSetting::ratio6_1, true);
-motor Right_Bottom(PORT20, gearSetting::ratio6_1, false);
+// VEXcode device constructors
+motor LeftDriveSmart = motor(PORT1, ratio18_1, false);
+motor RightDriveSmart = motor(PORT10, ratio18_1, true);
+inertial DrivetrainInertial = inertial(PORT3);
+smartdrive Drivetrain = smartdrive(LeftDriveSmart, RightDriveSmart, DrivetrainInertial, 319.19, 320, 40, mm, 1);
+motor ForkMotorGroupMotorA = motor(PORT2, ratio18_1, false);
+motor ForkMotorGroupMotorB = motor(PORT9, ratio18_1, true);
+motor_group ForkMotorGroup = motor_group(ForkMotorGroupMotorA, ForkMotorGroupMotorB);
+rotation Rotation4 = rotation(PORT4, false);
+gps GPS8 = gps(PORT8, 0.00, -240.00, mm, 180);
+distance DistanceLeft = distance(PORT12);
+distance DistanceRight = distance(PORT20);
+optical Optical19 = optical(PORT19);
+bumper BumperA = bumper(Brain.ThreeWirePort.A);
 
-motor Left_Top(PORT8, gearSetting::ratio6_1, false);
-motor Left_Middle(PORT9, gearSetting::ratio6_1, false);
-motor Left_Bottom(PORT10, gearSetting::ratio6_1, false);
-
-motor_group LeftDrive(Left_Top,Left_Middle,Left_Bottom);
-motor_group RightDrive(Right_Top, Right_Middle,Right_Bottom);
-
-smartdrive Drivetrain(LeftDrive, RightDrive, GPS8,12.57,15, 22, inches,1.8);
 // VEXcode generated functions
 
 
@@ -59,10 +64,10 @@ void vexcodeInit( void ) {
   Brain.Screen.setCursor(2, 1);
   // calibrate the drivetrain Inertial
   wait(200, msec);
-  GPS8.calibrate();
+  DrivetrainInertial.calibrate();
   Brain.Screen.print("Calibrating Inertial for Drivetrain");
   // wait for the Inertial calibration process to finish
-  while (GPS8.isCalibrating()) {
+  while (DrivetrainInertial.isCalibrating()) {
     wait(25, msec);
   }
   // reset the screen now that the calibration is complete
@@ -80,51 +85,15 @@ void printPosition() {
 }
 
 int main() {
-  // Calibrate the GPS Sensor before starting
+  // Calibrate the GPS before starting
   GPS8.calibrate();
   while (GPS8.isCalibrating()) { task::sleep(50); }
-
-  // Set the approximate starting position of the robot
-  // This helps the GPS Sensor know its starting position
-  // if it is too close to the field walls to get an accurate initial reading
 
   // Orient the drivetrain's heading with the GPS heading
   Drivetrain.setHeading(GPS8.heading(), degrees);
   Drivetrain.setTurnVelocity(25, percent);
-  
-  //change to mm and face forward
-  // GPS8.setLocation(-588.845, 1586.232, mm, 0, degrees);
 
   // Print the starting position of the robot
-  printPosition();
-  Drivetrain.drive(forward);
-
-  /*
-  // Keep driving until the GPS's reaches position 598.84
-  while ((GPS8.yPosition(mm) < -598.84)) {
-    wait(0.1, seconds);
-  }
-  Drivetrain.stop();
-
-  Drivetrain.turnToHeading(90, degrees, true);
-  Drivetrain.drive(forward);
-
-  // Keep driving until the GPS's reaches position 907.427
-  while ((GPS8.xPosition(mm) < -907.427)) {
-    wait(0.1, seconds);
-  }
-  Drivetrain.stop();
-
-  Drivetrain.turnToHeading(180, degrees, true);
-  Drivetrain.drive(forward);
-
-  // Keep driving until the GPS's reaches position 907.427
-  while ((GPS8.yPosition(mm) > -684.784)) {
-    wait(0.1, seconds);
-  }
-  Drivetrain.stop();
-
-  // Print the ending position of the robot
   printPosition();
 
   // Store the current position of the robot
@@ -132,8 +101,8 @@ int main() {
   float startingY = GPS8.yPosition(mm);
 
   // Store the target ending position of the robot
-  float endingX = -274.002;
-  float endingY = 274.002;
+  float endingX = -304;
+  float endingY = 608.3;
 
   // Implement atan2 to calculate the heading that the robot needs to
   // turn to in order to drive towards the ending position
@@ -152,5 +121,4 @@ int main() {
   
   // Print the ending position of the robot
   printPosition();
-  */
 }
